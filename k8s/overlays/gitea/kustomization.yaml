@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mero
+
+resources:
+  - ../../base
+
+images:
+  - name: mero
+    newName: git.krishnarajthadesar.in/krishnaraj/mero
+    newTag: git-6e8f763d4d1cf234398a44d5ce3fa47977243512

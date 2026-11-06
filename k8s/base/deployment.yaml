@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mero
+spec:
+  # Must stay 1: live boards are in-process memory (see app/rooms.py).
+  replicas: 1
+  # Recreate, not RollingUpdate: two pods side by side during a rollout would
+  # split users of the same board across two rooms. Clients reconnect on
+  # their own within a few seconds.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mero
+  template:
+    metadata:
+      labels:
+        app: mero
+    spec:
+      containers:
+        - name: app
+          image: mero
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+
+          envFrom:
+            - secretRef:
+                name: mero-env
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 3
+            periodSeconds: 5
+
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
